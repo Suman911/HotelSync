@@ -145,6 +145,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 ```
+---
+### To convert a string like "wow=tata&hi=bye" obtained via file_get_contents('php://input') into JSON, you first need to parse the URL-encoded string into an associative array, then convert that array into JSON. Here's how you can do it:
+
+```php
+// Get the raw input
+$input = file_get_contents('php://input');
+
+// Parse the URL-encoded string into an associative array
+parse_str($input, $parsedData);
+
+// Convert the associative array to JSON
+$jsonData = json_encode($parsedData);
+
+// Output or use the JSON data
+echo $jsonData;
+```
+
+
 
 ---
 

@@ -1,7 +1,7 @@
 <?php
 
-include_once "includes/session.php";
-include_once "includes/conn.php";
+include_once "./includes/session.php";
+require_once "./auth/conn.php";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 

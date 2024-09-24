@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <?php
-include_once "includes/session.php";
+include_once "./includes/session.php";
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-include_once "includes/inactive.php";
-include_once "includes/conn.php";
+include_once "./includes/inactive.php";
+include_once "./auth/conn.php";
 
 $_SESSION['timeout'] = time();
 $user_id = $_SESSION['user_id'];
