@@ -25,10 +25,12 @@ class API
             'Error' => $errorMassage
         ];
         echo json_encode($responce);
+        exit;
     }
     protected static function success($responce, $statusCode = 200): void
     {
         http_response_code($statusCode);
         echo json_encode($responce);
+        exit;
     }
 }

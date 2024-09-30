@@ -30,19 +30,15 @@ final class Post extends API
 
         $email = $body['email'] ?? false;
         $password = $body['password'] ?? false;
+        $password = md5($password);
 
         if ($email && $password) {
-            $stmt = $pdo->prepare("SELECT * FROM user WHERE username = :email");
-            $stmt->execute(['email' => $email]);
+            $stmt = $pdo->prepare("SELECT id, usertype, name, email FROM user WHERE username = :email AND password = :password");
+            $stmt->execute(['email' => $email, 'password' => $password]);
             $result = $stmt->fetchall(PDO::FETCH_ASSOC);
 
             if ($result && count($result) === 1) {
-                $selectedKeys = ['id', 'usertype', 'name', 'email'];
-                $auth = [];
-                foreach ($selectedKeys as $key) {
-                    $auth[$key] = $result[0][$key];
-                }
-                $jwt = JWT::encode($auth, 3600);
+                $jwt = JWT::encode($result[0], 3600);
                 setcookie('jwt_token', $jwt, time() + 3600, '/', '', false, true);
             } else {
                 throw new Exception("Wrong Email Or Password");
@@ -51,7 +47,7 @@ final class Post extends API
             throw new Exception("Error Processing Request");
         }
 
-        $responce = $auth;
+        $responce = $result[0];
         self::success($responce);
     }
     private static function adminlogin($auth, $body): void

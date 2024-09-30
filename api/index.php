@@ -1,5 +1,4 @@
 <?php
-
 require_once '../auth/JWT.php';
 
 function extBody()
@@ -42,8 +41,8 @@ try {
     $reqMethod = $_SERVER['REQUEST_METHOD'];
     switch ($reqMethod) {
         case 'GET':
-            require_once './API.php';
-            API::voidAPI($reqMethod, $reqUri, $auth, $body);
+            require_once './Get.php';
+            Get::_( $reqUri, $auth, $body);
             break;
         case 'POST':
             require_once './Post.php';
