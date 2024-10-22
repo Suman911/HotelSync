@@ -1,7 +1,7 @@
 <?php
 require_once './API.php';
 
-final class Patch extends API
+final class PATCH extends API
 {
     public static function _($reqUri, $auth, $body): void
     {
@@ -9,134 +9,158 @@ final class Patch extends API
             if ($auth['usertype'] !== 'admin')
                 throw new Exception('Access Denied, Only Admins Can Access Options APIs');
             switch ($reqUri) {
-                case '/APIs':
-                    self::APIs();
+                case '/checkInRoom':
+                    self::checkInRoom($auth, $body);
                     break;
-                case '/statuscodes':
-                    self::StatusCodes();
+                case '/checkOutRoom':
+                    self::checkOutRoom($auth, $body);
+                    break;
+                case '/complaints':
+                    self::complaints($auth, $body);
+                    break;
+                case '/rooms':
+                    self::rooms($auth, $body);
                     break;
                 default:
                     throw new Exception('API Request Not Found');
             }
         } catch (Exception $e) {
-            self::badRequest('options', $auth, $e->getMessage());
+            self::error('patch', $reqUri, $body, $e->getMessage());
         }
     }
-    private static function APIs(): void
+    private static function checkInRoom($auth, $body): void
     {
-        $responce = [
-            'GET' => [
-                'get1' => 'get1 API description',
-                'get2' => 'get2 API description',
-            ],
-            'POST' => [
-                'post1' => 'post1 API description',
-                'post2' => 'post2 API description',
-                'post3' => 'post3 API description',
-                'post4' => 'post4 API description',
-            ],
-            'PUT' => [
-                'put1' => 'put1 API description',
-                'put2' => 'put2 API description',
-                'put3' => 'put3 API description',
-            ],
-            'PATCH' => [
-                'patch1' => 'patch1 API description',
-                'patch2' => 'patch2 API description',
-                'patch3' => 'patch3 API description',
-                'patch4' => 'patch4 API description',
-                'patch5' => 'patch5 API description',
-                'patch6' => 'patch6 API description',
-            ],
-            'DELETE' => [
-                'delete1' => 'delete1 API description',
-                'delete2' => 'delete2 API description',
-                'delete3' => 'delete3 API description',
-            ],
-            'HEAD' => [
-                'head1' => 'head1 API description',
-            ],
-            'OPTIONS' => [
-                'APIs' => 'Returns all the available APIS',
-                'statuscodes' => 'Returns a list of HTTP status codes'
-            ]
-        ];
-        self::success($responce);
+        $booking_id = $body['booking_id'] ?? null;
+        $advance_payment = $body['advance_payment'] ?? null;
+        if (!$booking_id || !$advance_payment) {
+            throw new Exception('Booking ID and advance payment are required');
+        }
+
+        $pdo = Conn::setConnection();
+
+        try {
+            $query = "SELECT room_id, total_price FROM booking WHERE booking_id = :booking_id";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([':booking_id' => $booking_id]);
+            $booking_details = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$booking_details) {
+                self::unsuccess(['message' => 'Booking not found']);
+            }
+
+            $room_id = $booking_details['room_id'];
+            $remaining_price = $booking_details['total_price'] - $advance_payment;
+
+            $updateBooking = "UPDATE booking SET remaining_price = :remaining_price WHERE booking_id = :booking_id";
+            $stmt = $pdo->prepare($updateBooking);
+            $stmt->execute([':remaining_price' => $remaining_price, ':booking_id' => $booking_id]);
+
+            $updateRoom = "UPDATE room SET check_in_status = 1 WHERE room_id = :room_id";
+            $stmt = $pdo->prepare($updateRoom);
+            $stmt->execute([':room_id' => $room_id]);
+
+            self::success(['message' => 'Room successfully checked in']);
+        } catch (PDOException $e) {
+            throw new Exception("Database Error: " . $e->getMessage());
+        }
     }
-    private static function StatusCodes(): void
+    private static function checkOutRoom($auth, $body): void
     {
-        $responce = [
-            'Informational' => [
-                100 => 'Continue',
-                101 => 'Switching Protocols',
-                102 => 'Processing',
-            ],
-            'Success' => [
-                200 => 'OK',
-                201 => 'Created',
-                202 => 'Accepted',
-                203 => 'Non-Authoritative Information',
-                204 => 'No Content',
-                205 => 'Reset Content',
-                206 => 'Partial Content',
-                207 => 'Multi-Status',
-                208 => 'Already Reported',
-                226 => 'IM Used',
-            ],
-            'Redirection' => [
-                300 => 'Multiple Choices',
-                301 => 'Moved Permanently',
-                302 => 'Found',
-                303 => 'See Other',
-                304 => 'Not Modified',
-                307 => 'Temporary Redirect',
-                308 => 'Permanent Redirect',
-            ],
-            'Client Error' => [
-                400 => 'Bad Request',
-                401 => 'Unauthorized',
-                402 => 'Payment Required',
-                403 => 'Forbidden',
-                404 => 'Not Found',
-                405 => 'API Not Allowed',
-                406 => 'Not Acceptable',
-                407 => 'Proxy Authentication Required',
-                408 => 'Request Timeout',
-                409 => 'Conflict',
-                410 => 'Gone',
-                411 => 'Length Required',
-                412 => 'Precondition Failed',
-                413 => 'auth Too Large',
-                414 => 'URI Too Long',
-                415 => 'Unsupported Media Type',
-                416 => 'Range Not Satisfiable',
-                417 => 'Expectation Failed',
-                418 => 'I am a Teapot',
-                421 => 'Misdirected Request',
-                422 => 'Unprocessable Entity',
-                423 => 'Locked',
-                424 => 'Failed Dependency',
-                425 => 'Too Early',
-                426 => 'Upgrade Required',
-                428 => 'Precondition Required',
-                429 => 'Too Many Requests',
-                431 => 'Request Header Fields Too Large',
-                451 => 'Unavailable For Legal Reasons',
-            ],
-            'Server Error' => [
-                500 => 'Internal Server Error',
-                501 => 'Not Implemented',
-                502 => 'Bad Gateway',
-                503 => 'Service Unavailable',
-                504 => 'Gateway Timeout',
-                505 => 'HTTP Version Not Supported',
-                506 => 'Variant Also Negotiates',
-                507 => 'Insufficient Storage',
-                508 => 'Loop Detected',
-                510 => 'Not Extended',
-                511 => 'Network Authentication Required',
-            ],
-        ];
-        self::success($responce);
+        $booking_id = $body['booking_id'] ?? null;
+        $remaining_amount = $body['remaining_amount'] ?? null;
+        if (!$booking_id || !$remaining_amount) {
+            throw new Exception('Booking ID and remaining amount are required');
+        }
+
+        $pdo = Conn::setConnection();
+
+        try {
+            $query = "SELECT room_id, remaining_price FROM booking WHERE booking_id = :booking_id";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([':booking_id' => $booking_id]);
+            $booking_details = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$booking_details) {
+                self::unsuccess(['message' => 'Booking not found']);
+            }
+
+            $room_id = $booking_details['room_id'];
+            $remaining_price = $booking_details['remaining_price'];
+
+            if ($remaining_price == $remaining_amount) {
+                $updateBooking = "UPDATE booking SET remaining_price = 0, payment_status = 1 WHERE booking_id = :booking_id";
+                $stmt = $pdo->prepare($updateBooking);
+                $stmt->execute([':booking_id' => $booking_id]);
+
+                $updateRoom = "UPDATE room SET status = NULL, check_in_status = 0, check_out_status = 1 WHERE room_id = :room_id";
+                $stmt = $pdo->prepare($updateRoom);
+                $stmt->execute([':room_id' => $room_id]);
+
+                self::success(['message' => 'Room successfully checked out']);
+            } else {
+                self::unsuccess(['message' => 'Please enter the full payment amount']);
+            }
+        } catch (PDOException $e) {
+            throw new Exception("Database Error: " . $e->getMessage());
+        }
+    }
+    private static function rooms($auth, $body): void
+    {
+        if ($auth['usertype'] !== 'admin') {
+            throw new Exception('Access Denied: Only Admins Can Delete Room');
+        }
+
+        $room_id = $body['room_id'] ?? false;
+        if (!$room_id) {
+            throw new Exception('Room ID is required');
+        }
+
+        $pdo = Conn::setConnection();
+
+        try {
+            $query = "UPDATE room SET deleteStatus = '1' WHERE room_id = :room_id AND status IS NULL";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindParam(':room_id', $room_id, PDO::PARAM_INT);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount() > 0) {
+                    self::success(['message' => 'Room deleted successfully']);
+                } else {
+                    self::unsuccess(['message' => 'Room not found or already deleted']);
+                }
+            } else {
+                throw new Exception('Error deleting room');
+            }
+        } catch (PDOException $e) {
+            throw new Exception("Database Error: " . $e->getMessage());
+        }
+    }
+    private static function complaints($auth, $body): void
+    {
+        $requiredFields = ['complaint_id', 'budget'];
+        foreach ($requiredFields as $field) {
+            if (empty($body[$field])) {
+                throw new Exception("Missing Required Field: $field");
+            }
+        }
+
+        $pdo = Conn::setConnection();
+
+        try {
+            $query = "UPDATE complaint SET budget = :budget, resolve_status = 1 WHERE id = :complaint_id";
+            $stmt = $pdo->prepare($query);
+            $params = [
+                ':budget' => $body['budget'],
+                ':complaint_id' => $body['complaint_id'],
+            ];
+
+            if ($stmt->execute($params)) {
+                self::success(['message' => 'Complaint resolved successfully']);
+            } else {
+                throw new Exception('Failed to resolve complaint');
+            }
+        } catch (PDOException $e) {
+            throw new Exception("Database Error: " . $e->getMessage());
+        }
     }
 }

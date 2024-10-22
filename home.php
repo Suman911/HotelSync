@@ -2,24 +2,12 @@
 <?php
 include_once "./includes/session.php";
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_COOKIE['jwt_token'])) {
     header('Location: login.php');
     exit();
 }
 
 include_once "./includes/inactive.php";
-include_once "./auth/conn.php";
-
-$_SESSION['timeout'] = time();
-$user_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT * FROM user WHERE id = :id");
-$stmt->execute(['id' => $user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-if ($user) {
-    var_dump($user);
-} else {
-    echo "no user";
-}
 
 ?>
 <html lang="en">

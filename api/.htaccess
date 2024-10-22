@@ -1,7 +1,9 @@
-# Enable rewrite engine
+# Enable the rewrite engine
 RewriteEngine On
 
-# Redirect all requests starting with /api to index.php
-RewriteCond %{REQUEST_URI} ^/HotelSync/api
-RewriteRule ^(.*)$ index.php [QSA,L]
+# Redirect all requests with /api to index.php
+RewriteCond %{REQUEST_URI} ^/api
+RewriteRule ^(.*)$ index.php [L]
 
+RewriteCond %{REQUEST_URI} /api
+RewriteRule ^(.*)$ index.php [L]

@@ -1,5 +1,6 @@
 <?php
 require_once '../auth/JWT.php';
+require_once '../auth/envLoader.php';
 
 function extBody()
 {
@@ -30,46 +31,28 @@ function extAuth($reqUri)
 
 header('Content-Type: application/json');
 try {
+    EnvLoader::load();
+
     $reqUri = $_SERVER['REQUEST_URI'];
-    $reqUri = str_replace('/HotelSync/api', '', $reqUri);
+    $reqUri = str_replace($_ENV['API_Root'], '', $reqUri);
     $reqUri = strtok($reqUri, '?');
     $reqUri = rtrim($reqUri, '/');
 
     $body = extBody();
     $auth = extAuth($reqUri);
 
-    $reqMethod = $_SERVER['REQUEST_METHOD'];
-    switch ($reqMethod) {
-        case 'GET':
-            require_once './Get.php';
-            Get::_( $reqUri, $auth, $body);
-            break;
-        case 'POST':
-            require_once './Post.php';
-            Post::_($reqUri, $auth, $body);
-            break;
-        case 'PUT':
-            require_once './API.php';
-            API::voidAPI($reqMethod, $reqUri, $auth, $body);
-            break;
-        case 'PATCH':
-            require_once './API.php';
-            API::voidAPI($reqMethod, $reqUri, $auth, $body);
-            break;
-        case 'DELETE':
-            require_once './API.php';
-            API::voidAPI($reqMethod, $reqUri, $auth, $body);
-            break;
-        case 'HEAD':
-            require_once './API.php';
-            API::voidAPI($reqMethod, $reqUri, $auth, $body);
-            break;
-        case 'OPTIONS':
-        default:
-            require_once './Options.php';
-            Options::_($reqUri, $auth, $body);
+    $reqMethod = strtoupper($_SERVER['REQUEST_METHOD']);
+    $validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+
+    if (in_array($reqMethod, $validMethods)) {
+        require_once "./$reqMethod.php";
+        $reqMethod::_($reqUri, $auth, $body);
+    } else {
+        throw new Exception("Error Processing Request: request method not found.");
     }
+
 } catch (Exception $e) {
+    http_response_code(400);
     $responce = [
         'Error' => 'Access Denied, ' . $e->getMessage()
     ];

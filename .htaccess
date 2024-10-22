@@ -1,0 +1,13 @@
+Options -Indexes
+# Enable the rewrite engine
+# RewriteEngine On
+
+# Redirect all requests starting with /HotelSync/home to home.php
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^home/?$ home.php [L,QSA]
+
+# Redirect all requests starting with /HotelSync/login to login.php
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^login/?$ login.php [L,QSA]

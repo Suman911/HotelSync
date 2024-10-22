@@ -1,26 +1,24 @@
 <?php
-
-class Conn
+final class Conn
 {
-    public static function setConnection(): object
+    public static function setConnection(): mixed
     {
-        $servername = "localhost";
-        $username = "root";
-        $password = "";
-        $database = "hotelsync";
+        $servername = $_ENV['DB_HOST'];
+        $username = $_ENV['DB_USERNAME'];
+        $password = $_ENV['DB_PASSWORD'];
+        $database = $_ENV['DB_DATABASE'];
+
         $dsn = "mysql:host=$servername;dbname=$database";
 
         $maxRetries = 3;
         $retryDelay = 1;
-
-        $pdo = null;
         $attempt = 0;
         while ($attempt < $maxRetries) {
             try {
                 $pdo = new PDO($dsn, $username, $password);
                 $pdo->setAttribute(PDO::ATTR_PERSISTENT, true);
                 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                break;
+                return $pdo;
             } catch (PDOException $e) {
                 if ($attempt + 1 >= $maxRetries) {
                     http_response_code(500);
@@ -33,6 +31,6 @@ class Conn
                 sleep($retryDelay);
             }
         }
-        return $pdo;
+        return null;
     }
 }
