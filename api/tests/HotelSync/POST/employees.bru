@@ -6,6 +6,21 @@ meta {
 
 post {
   url: employees
-  body: none
+  body: json
   auth: none
+}
+
+body:json {
+  {
+      "staff_type": 2,
+      "shift": 1,
+      "first_name": "Jane",
+      "last_name": "Doe",
+      "contact_no": "0987654321",
+      "id_card_id": 1,
+      "id_card_no": "B987654321",
+      "address": "456 Elm Street, City, Country",
+      "salary": 4000
+  }
+  
 }

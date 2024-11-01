@@ -6,6 +6,21 @@ meta {
 
 put {
   url: employees
-  body: none
+  body: json
   auth: none
+}
+
+body:json {
+  {
+      "emp_id": 14,
+      "id_card_type": 1,
+      "id_card_no": "C987654321",
+      "staff_type_id": 2,
+      "shift_id": 1,
+      "address": "789 Oak Avenue, City, Country",
+      "contact_no": "1234567890",
+      "salary": 5000
+  }
+  
+  
 }

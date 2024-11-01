@@ -6,6 +6,14 @@ meta {
 
 put {
   url: complaints
-  body: none
+  body: json
   auth: none
+}
+
+body:json {
+  {
+      "complaint_id": 6,
+      "budget": 6000
+  }
+  
 }

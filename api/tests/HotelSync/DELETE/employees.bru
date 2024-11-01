@@ -6,6 +6,13 @@ meta {
 
 delete {
   url: employees
-  body: none
+  body: json
   auth: none
+}
+
+body:json {
+  {
+      "empid": [123, 124, 125]
+  }
+  
 }

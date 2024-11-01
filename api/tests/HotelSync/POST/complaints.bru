@@ -6,6 +6,15 @@ meta {
 
 post {
   url: complaints
-  body: none
+  body: json
   auth: none
+}
+
+body:json {
+  {
+      "complainant_name": "John Doe",
+      "complaint_type": "Service Quality",
+      "complaint": "The service was not up to the expected standards."
+  }
+  
 }

@@ -138,8 +138,12 @@ final class PUT extends API
                 ':complaint_id' => $body['complaint_id'],
             ];
 
-            if ($stmt->execute($params)) {
-                self::success(['message' => 'Complaint resolved successfully']);
+            if ($stmt->execute($params) && $stmt->rowCount() > 0) {
+                if ($stmt->execute($params) && $stmt->rowCount() > 0) {
+                    self::success(['message' => 'Complaint resolved successfully']);
+                } else {
+                    throw new Exception('Complaint not fond or alrady resolved');
+                }
             } else {
                 throw new Exception('Failed to resolve complaint');
             }
