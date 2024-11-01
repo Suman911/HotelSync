@@ -1,0 +1,27 @@
+auth {
+  mode: none
+}
+
+script:pre-request {
+  req.setUrl(`localhost/HotelSync/api/${req.url}`);
+  
+  const axios = require('axios');
+  
+  const options = {
+    method: 'POST',
+    url: 'http://localhost/HotelSync/api/login',
+    headers: {'content-type': 'application/json'},
+    data: {email: 'christine', password: '201452064'}
+  };
+  
+  async function login() {
+    try {
+      const { data } = await axios.request(options);
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+  login();
+}

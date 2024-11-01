@@ -1,5 +1,6 @@
 <?php
 require_once './API.php';
+require_once '../auth/conn.php';
 
 final class PATCH extends API
 {
@@ -15,17 +16,17 @@ final class PATCH extends API
                 case '/checkOutRoom':
                     self::checkOutRoom($auth, $body);
                     break;
-                case '/complaints':
-                    self::complaints($auth, $body);
-                    break;
                 case '/rooms':
                     self::rooms($auth, $body);
+                    break;
+                case '/shifts':
+                    self::shifts($auth, $body);
                     break;
                 default:
                     throw new Exception('API Request Not Found');
             }
         } catch (Exception $e) {
-            self::error('patch', $reqUri, $body, $e->getMessage());
+            self::error('PATCH', $reqUri, $body, $e->getMessage());
         }
     }
     private static function checkInRoom($auth, $body): void
@@ -98,7 +99,7 @@ final class PATCH extends API
 
                 self::success(['message' => 'Room successfully checked out']);
             } else {
-                self::unsuccess(['message' => 'Please enter the full payment amount']);
+                self::unsuccess(['message' => "Please enter the full payment amount $remaining_price"]);
             }
         } catch (PDOException $e) {
             throw new Exception("Database Error: " . $e->getMessage());
@@ -110,23 +111,29 @@ final class PATCH extends API
             throw new Exception('Access Denied: Only Admins Can Delete Room');
         }
 
-        $room_id = $body['room_id'] ?? false;
-        if (!$room_id) {
-            throw new Exception('Room ID is required');
+        $requiredFields = ['room_id', 'delete_room'];
+        foreach ($requiredFields as $field) {
+            if (!isset($body[$field])) {
+                throw new Exception("Missing Required Field: $field");
+            }
         }
 
         $pdo = Conn::setConnection();
 
         try {
-            $query = "UPDATE room SET deleteStatus = '1' WHERE room_id = :room_id AND status IS NULL";
+            $query = "UPDATE room SET deleteStatus = :deleteStatus WHERE room_id = :room_id AND status IS NULL";
             $stmt = $pdo->prepare($query);
-            $stmt->bindParam(':room_id', $room_id, PDO::PARAM_INT);
+            $params = [
+                ':room_id' => $body['room_id'],
+                ':deleteStatus' => $body['delete_room']
+            ];
 
-            if ($stmt->execute()) {
+            if ($stmt->execute($params)) {
+                $statu = $body['delete_room'] ? 'hidden' : 'live';
                 if ($stmt->rowCount() > 0) {
-                    self::success(['message' => 'Room deleted successfully']);
+                    self::success(['message' => "Room is $statu now"]);
                 } else {
-                    self::unsuccess(['message' => 'Room not found or already deleted']);
+                    self::unsuccess(['message' => "Room not found or already $statu"]);
                 }
             } else {
                 throw new Exception('Error deleting room');
@@ -139,7 +146,7 @@ final class PATCH extends API
     {
         $requiredFields = ['complaint_id', 'budget'];
         foreach ($requiredFields as $field) {
-            if (empty($body[$field])) {
+            if (!isset($body[$field])) {
                 throw new Exception("Missing Required Field: $field");
             }
         }
@@ -161,6 +168,66 @@ final class PATCH extends API
             }
         } catch (PDOException $e) {
             throw new Exception("Database Error: " . $e->getMessage());
+        }
+    }
+    private static function shifts($auth, $body): void
+    {
+        if ($auth['usertype'] !== 'admin') {
+            throw new Exception('Access Denied: Only Admins Can Edit Room Details');
+        }
+
+        $requiredFields = ['emp_id', 'shift_id'];
+        foreach ($requiredFields as $field) {
+            if (!isset($body[$field])) {
+                throw new Exception("Missing Required Field: $field");
+            }
+        }
+
+        $pdo = Conn::setConnection();
+
+        try {
+            $pdo->beginTransaction();
+
+            $query = "UPDATE staff SET shift_id = :shift_id WHERE emp_id = :emp_id";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([
+                ':shift_id' => $body['shift_id'],
+                ':emp_id' => $body['emp_id']
+            ]);
+
+            if ($stmt->rowCount() === 0) {
+                $pdo->rollBack();
+                self::unsuccess(['message' => 'Employee not found or shift not changed'], 404);
+            }
+
+            $to_date = date("Y-m-d H:i:s");
+            $updateHistory = "UPDATE emp_history SET to_date = :to_date WHERE emp_id = :emp_id AND to_date IS NULL";
+            $stmt = $pdo->prepare($updateHistory);
+            $stmt->execute([
+                ':to_date' => $to_date,
+                ':emp_id' => $body['emp_id']
+            ]);
+
+            $insertHistory = "INSERT INTO emp_history (emp_id, shift_id) VALUES (:emp_id, :shift_id)";
+            $stmt = $pdo->prepare($insertHistory);
+            if (
+                $stmt->execute([
+                    ':emp_id' => $body['emp_id'],
+                    ':shift_id' => $body['shift_id']
+                ])
+            ) {
+                $pdo->commit();
+                self::success(['message' => 'Shift updated successfully']);
+            } else {
+                throw new Exception('Failed to insert new shift history');
+            }
+
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            throw new Exception("Database Error: " . $e->getMessage());
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw new Exception($e->getMessage());
         }
     }
 }

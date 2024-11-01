@@ -1,0 +1,19 @@
+meta {
+  name: rooms
+  type: http
+  seq: 1
+}
+
+put {
+  url: rooms
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "room_id" : 27,
+    "room_no" : "k-989",
+    "room_type_id": 5
+  }
+}

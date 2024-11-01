@@ -11,7 +11,6 @@ final class Conn
         $dsn = "mysql:host=$servername;dbname=$database";
 
         $maxRetries = 3;
-        $retryDelay = 1;
         $attempt = 0;
         while ($attempt < $maxRetries) {
             try {
@@ -20,16 +19,12 @@ final class Conn
                 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 return $pdo;
             } catch (PDOException $e) {
-                if ($attempt + 1 >= $maxRetries) {
+                if (++$attempt == $maxRetries) {
                     http_response_code(500);
-                    $response = [
-                        'Error' => "Error connecting to the database after $maxRetries attempts: " . $e->getMessage()
-                    ];
-                    die(json_encode($response));
+                    throw new Exception("Error connecting to the database after $attempt attempts: " . $e->getMessage());
                 }
-                $attempt++;
-                sleep($retryDelay);
             }
+            sleep($attempt);
         }
         return null;
     }

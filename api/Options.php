@@ -38,7 +38,7 @@ final class OPTIONS extends API
                     throw new Exception('API Request Not Found');
             }
         } catch (Exception $e) {
-            self::error('options', $reqUri, $body, $e->getMessage());
+            self::error('OPTIONS', $reqUri, $body, $e->getMessage());
         }
     }
     private static function help(): void
@@ -50,7 +50,7 @@ final class OPTIONS extends API
                     'description' => 'Returns various counts related to rooms, staff, reservations, complaints, and income.',
                 ],
                 'rooms' => [
-                    'description' => 'Handles room-related operations, including retrieving, adding, updating, and deleting rooms.',
+                    'description' => 'Handles room-related operations, including retrieving, adding, updating and hiding rooms.',
                 ],
                 'customers' => [
                     'description' => 'Manages customer-related data, including retrieving customer details and booked room information.',
@@ -59,7 +59,7 @@ final class OPTIONS extends API
                     'description' => 'Handles room booking operations, including creating new bookings and checking in/out rooms.',
                 ],
                 'authentication' => [
-                    'description' => 'Handles user authentication, including login and logout functionalities.',
+                    'description' => 'Handles user authentication, including login, session refresh and logout functionalities.',
                 ],
                 'employees' => [
                     'description' => 'Manages employee-related operations, including adding, updating, and deleting employee records.',
@@ -77,208 +77,200 @@ final class OPTIONS extends API
     private static function dashboard(): void
     {
         $responce = [
-            'Dashboard' => [
-                'GET' => [
-                    'dashBoardCounts' => [
-                        'params' => [],
-                        'result' => [
-                            'total_rooms',
-                            'available_rooms',
-                            'booked_rooms',
-                            'checked_in_rooms',
-                            'total_reservations',
-                            'pending_bookings',
-                            'total_staff',
-                            'total_complaints',
-                            'total_income',
-                            'total_due'
-                        ]
-                    ],
+            'GET' => [
+                'dashBoardCounts' => [
+                    'params' => [],
+                    'result' => [
+                        'total_rooms',
+                        'available_rooms',
+                        'booked_rooms',
+                        'checked_in_rooms',
+                        'total_reservations',
+                        'pending_bookings',
+                        'total_staff',
+                        'total_complaints',
+                        'total_income',
+                        'total_due'
+                    ]
                 ],
-            ]
+            ],
         ];
         self::success($responce);
     }
     private static function rooms(): void
     {
         $responce = [
-            'Rooms' => [
-                'GET' => [
-                    'rooms' => [
-                        'params' => ['room_id'],
-                        'result' => [
-                            'room_no',
-                            'room_type_id'
-                        ]
-                    ],
-                    'availableRooms' => [
-                        'params' => ['room_type_id'],
-                        'result' => [
-                            'count' => 'Number of rooms',
-                            'rooms' => [
-                                [
-                                    'room_id',
-                                    'room_no'
-                                ]
+            'GET' => [
+                'rooms' => [
+                    'params' => ['room_id'],
+                    'result' => [
+                        'room_no',
+                        'room_type_id'
+                    ]
+                ],
+                'availableRooms' => [
+                    'params' => ['room_type_id'],
+                    'result' => [
+                        'count' => 'Number of rooms',
+                        'rooms' => [
+                            [
+                                'room_id',
+                                'room_no'
                             ]
                         ]
-                    ],
+                    ]
                 ],
-                'POST' => [
-                    'rooms' => [
-                        'params' => ['room_type_id', 'room_no'],
-                        'result' => 'Add new Room'
-                    ],
+            ],
+            'POST' => [
+                'rooms' => [
+                    'params' => ['room_type_id', 'room_no'],
+                    'result' => 'Add new Room'
                 ],
-                'PUT' => [
-                    'rooms' => [
-                        'params' => ['room_id', 'room_no', 'room_type_id'],
-                        'result' => 'Update room details'
-                    ],
+            ],
+            'PUT' => [
+                'rooms' => [
+                    'params' => ['room_id', 'room_no', 'room_type_id'],
+                    'result' => 'Update room details'
                 ],
-                'PATCH' => [
-                    'deleteRoom' => [
-                        'params' => ['room_id'],
-                        'result' => 'Delete a room by marking it as deleted (soft delete) if it is not currently in use'
-                    ],
+            ],
+            'PATCH' => [
+                'rooms' => [
+                    'params' => ['room_id'],
+                    'result' => 'Makes a room hidden or live'
                 ],
-            ]
+            ],
         ];
         self::success($responce);
     }
     private static function customers(): void
     {
         $responce = [
-            'Customers' => [
-                'GET' => [
-                    'customerDetails' => [
-                        'params' => ['room_id'],
-                        'result' => [
-                            'customer_id',
-                            'customer_name',
-                            'contact_no',
-                            'email',
-                            'id_card_no',
-                            'id_card_type',
-                            'address',
-                            'remaining_price'
-                        ]
-                    ],
-                    'bookedRoomDetails' => [
-                        'params' => ['room_id'],
-                        'result' => [
-                            'booking_id',
-                            'name',
-                            'room_no',
-                            'room_type',
-                            'check_in',
-                            'check_out',
-                            'total_price',
-                            'remaining_price'
-                        ]
-                    ],
+            'GET' => [
+                'customerDetails' => [
+                    'params' => ['room_id'],
+                    'result' => [
+                        'customer_id',
+                        'customer_name',
+                        'contact_no',
+                        'email',
+                        'id_card_no',
+                        'id_card_type',
+                        'address',
+                        'remaining_price'
+                    ]
                 ],
-            ]
+                'bookedRoomDetails' => [
+                    'params' => ['room_id'],
+                    'result' => [
+                        'booking_id',
+                        'name',
+                        'room_no',
+                        'room_type',
+                        'check_in',
+                        'check_out',
+                        'total_price',
+                        'remaining_price'
+                    ]
+                ],
+            ],
         ];
         self::success($responce);
     }
     private static function bookings(): void
     {
         $responce = [
-            'Bookings' => [
-                'POST' => [
-                    'bookings' => [
-                        'params' => ['room_id', 'check_in', 'check_out', 'total_price', 'name', 'contact_no', 'email', 'id_card_id', 'id_card_no', 'address'],
-                        'result' => 'Create a new booking for a room'
-                    ],
+            'POST' => [
+                'bookings' => [
+                    'params' => ['room_id', 'check_in', 'check_out', 'total_price', 'name', 'contact_no', 'email', 'id_card_id', 'id_card_no', 'address'],
+                    'result' => 'Create a new booking for a room'
                 ],
-                'PATCH' => [
-                    'checkInRoom' => [
-                        'params' => ['booking_id', 'advance_payment'],
-                        'result' => 'Check in a room for a booking with advance payment'
-                    ],
-                    'checkOutRoom' => [
-                        'params' => ['booking_id', 'remaining_amount'],
-                        'result' => 'Check out a room for a booking with the remaining payment amount'
-                    ],
+            ],
+            'PATCH' => [
+                'checkInRoom' => [
+                    'params' => ['booking_id', 'advance_payment'],
+                    'result' => 'Check in a room for a booking with advance payment'
                 ],
-            ]
+                'checkOutRoom' => [
+                    'params' => ['booking_id', 'remaining_amount'],
+                    'result' => 'Check out a room for a booking with the remaining payment amount'
+                ],
+            ],
         ];
         self::success($responce);
     }
     private static function authentication(): void
     {
         $responce = [
-            'Authentication' => [
-                'POST' => [
-                    'login' => [
-                        'params' => ['email', 'password'],
-                        'result' => [
-                            'id',
-                            'usertype',
-                            'name',
-                            'email',
-                            'jwt_token set using cookies'
-                        ]
-                    ],
+            'POST' => [
+                'login' => [
+                    'params' => ['email', 'password'],
+                    'result' => [
+                        'id',
+                        'usertype',
+                        'name',
+                        'email',
+                        'jwt_token set using cookies'
+                    ]
                 ],
-                'DELETE' => [
-                    'logout' => [
-                        'params' => [],
-                        'result' => 'Logout a user by clearing the JWT token'
-                    ],
+            ],
+            'PUT' => [
+                'refresh' => [
+                    'result' => 'Refreshes the session'
+                ]
+            ],
+            'DELETE' => [
+                'logout' => [
+                    'result' => 'Logout a user by clearing the JWT token'
                 ],
-            ]
+            ],
         ];
         self::success($responce);
     }
     private static function employees(): void
     {
         $responce = [
-            'Employees' => [
-                'POST' => [
-                    'employees' => [
-                        'params' => ['staff_type', 'shift', 'first_name', 'last_name', 'contact_no', 'id_card_id', 'id_card_no', 'address', 'salary'],
-                        'result' => 'Add a new employee with their details and history'
-                    ],
+            'POST' => [
+                'employees' => [
+                    'params' => ['staff_type', 'shift', 'first_name', 'last_name', 'contact_no', 'id_card_id', 'id_card_no', 'address', 'salary'],
+                    'result' => 'Add a new employee with their details and history'
                 ],
-                'PUT' => [
-                    'employees' => [
-                        'params' => ['emp_id', 'first_name', 'last_name', 'staff_type_id', 'shift_id', 'id_card_no', 'address', 'contact_no', 'joining_date', 'salary'],
-                        'result' => 'Update employee details'
-                    ],
-                    'shifts' => [
-                        'params' => ['emp_id', 'shift_id'],
-                        'result' => 'Update employee shift details'
-                    ],
+            ],
+            'PUT' => [
+                'employees' => [
+                    'params' => ['emp_id', 'first_name', 'last_name', 'staff_type_id', 'shift_id', 'id_card_no', 'address', 'contact_no', 'joining_date', 'salary'],
+                    'result' => 'Update employee details'
+                ]
+            ],
+            'PATCH' =>[
+                'shifts' => [
+                    'params' => ['emp_id', 'shift_id'],
+                    'result' => 'Update employee shift details'
                 ],
-                'DELETE' => [
-                    'employees' => [
-                        'params' => ['empid'],
-                        'result' => 'Delete one or more employees'
-                    ],
+            ],
+            'DELETE' => [
+                'employees' => [
+                    'params' => ['empid'],
+                    'result' => 'Delete one or more employees'
                 ],
-            ]
+            ],
         ];
         self::success($responce);
     }
     private static function complaints(): void
     {
         $responce = [
-            'Complaints' => [
-                'POST' => [
-                    'complaints' => [
-                        'params' => ['complainant_name', 'complaint_type', 'complaint'],
-                        'result' => 'Create a new complaint'
-                    ],
+            'POST' => [
+                'complaints' => [
+                    'params' => ['complainant_name', 'complaint_type', 'complaint'],
+                    'result' => 'Create a new complaint'
                 ],
-                'PATCH' => [
-                    'resolveComplaint' => [
-                        'params' => ['complaint_id', 'budget'],
-                        'result' => 'Resolve a complaint by updating its budget and marking it as resolved'
-                    ],
+            ],
+            'PUT' => [
+                'resolveComplaint' => [
+                    'params' => ['complaint_id', 'budget'],
+                    'result' => 'Resolve a complaint by updating its budget and marking it as resolved'
                 ],
-            ]
+            ],
         ];
         self::success($responce);
     }

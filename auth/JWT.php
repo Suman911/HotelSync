@@ -11,7 +11,7 @@ class JWT
     ];
 
     // Encode the JWT with header, payload, and signature
-    public static function encode(array $payload, $exp = 3600, $alg = "")
+    public static function encode(array $payload, $exp = 86400, $alg = "")
     {
         $alg = $alg ?: self::$alg;
 
@@ -36,7 +36,7 @@ class JWT
     }
 
     // Decode and verify the JWT, with optional auto-refresh if about to expire
-    public static function decode($jwt, $autoRefresh = True)
+    public static function decode($jwt)
     {
         $parts = explode('.', $jwt);
         if (count($parts) !== 3) {
@@ -60,27 +60,23 @@ class JWT
         $signatureValid = self::verify("$base64UrlHeader.$base64UrlPayload", $signatureProvided, $alg);
 
         if (!$signatureValid) {
-            throw new Exception('Invalid signature');
-        }
-
-        // Check expiration
-        if (isset($payload['exp'])) {
-            if (time() >= $payload['exp']) {
-                throw new Exception('Token has expired');
-            }
-
-            // If the token is about to expire in less than 10 minutes, refresh it
-            if ($autoRefresh && ($payload['exp'] - time()) < 300) {
-                $payload = self::refresh($payload);
-            }
+            throw new Exception('Token is corrupted');
         }
 
         return $payload;
     }
 
     // Refresh the JWT by extending the expiration time
-    private static function refresh(array $payload, $exp = 3600)
+    private static function refresh(array $payload, $exp = 86400)
     {
+        if (!isset($payload['exp'])) {
+            throw new Exception('Token is corrupted');
+        }
+        // Check expiration
+        if (time() >= $payload['exp']) {
+            throw new Exception('Token is already expired please login again');
+        }
+
         unset($payload['exp']);  // Remove the old expiration time
         return self::encode($payload, $exp);  // Re-encode with a new expiration
     }

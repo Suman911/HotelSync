@@ -28,7 +28,7 @@ final class POST extends API
                     throw new Exception('API Request Not Found');
             }
         } catch (Exception $e) {
-            self::error('Post', $reqUri, $body, $e->getMessage());
+            self::error('POST', $reqUri, $body, $e->getMessage());
         }
     }
     private static function login($auth, $body): void
@@ -50,8 +50,8 @@ final class POST extends API
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($result) {
-                $jwt = JWT::encode($result, 3600);
-                setcookie('jwt_token', $jwt, time() + 3600, '/', '', false, true);
+                $jwt = JWT::encode($result, 86400);
+                setcookie('jwt_token', $jwt, time() + 86400, '/', '', false, true);
 
                 $response = $result;
                 self::success($response, 202);
@@ -88,7 +88,12 @@ final class POST extends API
                 $insertQuery = "INSERT INTO room (room_type_id, room_no) VALUES (:room_type_id, :room_no)";
                 $stmt = $pdo->prepare($insertQuery);
                 if ($stmt->execute(['room_type_id' => $room_type_id, 'room_no' => $room_no])) {
-                    self::success(['message' => 'Successfully Added Room'], 201);
+                    $roomID = $pdo->lastInsertId();
+                    $responce = [
+                        'message' => 'Successfully Added Room',
+                        'room_id' => $roomID
+                    ];
+                    self::success($responce, 201);
                 } else {
                     throw new Exception('Database Error: Could not add room');
                 }
@@ -105,7 +110,7 @@ final class POST extends API
 
         $requiredFields = ['room_id', 'check_in', 'check_out', 'total_price', 'name', 'contact_no', 'email', 'id_card_id', 'id_card_no', 'address'];
         foreach ($requiredFields as $field) {
-            if (empty($body[$field])) {
+            if (!isset($body[$field])) {
                 throw new Exception("Missing Required Field: $field");
             }
         }
@@ -141,13 +146,18 @@ final class POST extends API
                 ':remaining_price' => $body['total_price']
             ];
             $stmt->execute($params);
+            $bookingID = $pdo->lastInsertId();
 
-            $room_stats_sql = "UPDATE room SET status = '1' WHERE room_id = :room_id";
+            $room_stats_sql = "UPDATE room SET status = true WHERE room_id = :room_id";
             $stmt = $pdo->prepare($room_stats_sql);
             $stmt->execute([':room_id' => $body['room_id']]);
 
             $pdo->commit();
-            self::success(['message' => 'Room successfully booked'], 201);
+            $responce = [
+                'message' => 'Room successfully booked',
+                'booking_id' => $bookingID
+            ];
+            self::success($responce, 201);
         } catch (PDOException $e) {
             $pdo->rollBack();
             throw new Exception("Database Error: " . $e->getMessage());
@@ -157,7 +167,7 @@ final class POST extends API
     {
         $requiredFields = ['staff_type', 'shift', 'first_name', 'last_name', 'contact_no', 'id_card_id', 'id_card_no', 'address', 'salary'];
         foreach ($requiredFields as $field) {
-            if (empty($body[$field])) {
+            if (!isset($body[$field])) {
                 throw new Exception("Missing Required Field: $field");
             }
         }
@@ -197,7 +207,11 @@ final class POST extends API
             }
 
             $pdo->commit();
-            self::success(['message' => 'Employee added successfully'], 201);
+            $responce = [
+                'message' => 'Room successfully booked',
+                'emp_id' => $emp_id
+            ];
+            self::success($responce, 201);
         } catch (PDOException $e) {
             $pdo->rollBack();
             throw new Exception("Database Error: " . $e->getMessage());
@@ -210,7 +224,7 @@ final class POST extends API
     {
         $requiredFields = ['complainant_name', 'complaint_type', 'complaint'];
         foreach ($requiredFields as $field) {
-            if (empty($body[$field])) {
+            if (!isset($body[$field])) {
                 throw new Exception("Missing Required Field: $field");
             }
         }
@@ -227,7 +241,12 @@ final class POST extends API
             ];
 
             if ($stmt->execute($params)) {
-                self::success(['message' => 'complaint creater successfully'], 201);
+                $complaintID = $pdo->lastInsertId();
+                $responce = [
+                    'message' => 'Complaint registered successfully',
+                    'complaint_id' => $complaintID
+                ];
+                self::success($responce, 201);
             } else {
                 throw new Exception('Failed to create complaint');
             }

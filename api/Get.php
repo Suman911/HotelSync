@@ -8,7 +8,7 @@ final class GET extends API
     {
         try {
             switch ($reqUri) {
-                case '/dashboardcounts':
+                case '/dashBoardCounts':
                     self::dashBoardCounts($auth, $body);
                     break;
                 case '/rooms':
@@ -27,7 +27,7 @@ final class GET extends API
                     throw new Exception('API Request Not Found');
             }
         } catch (Exception $e) {
-            self::error('get', $reqUri, $body, $e->getMessage());
+            self::error('GET', $reqUri, $body, $e->getMessage());
         }
     }
     private static function dashBoardCounts($auth, $body): void
@@ -191,7 +191,6 @@ final class GET extends API
 
             if ($room) {
                 $response = [
-                    'done' => true,
                     'booking_id' => $room['booking_id'],
                     'name' => $room['customer_name'],
                     'room_no' => $room['room_no'],

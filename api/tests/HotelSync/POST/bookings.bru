@@ -1,0 +1,27 @@
+meta {
+  name: bookings
+  type: http
+  seq: 3
+}
+
+post {
+  url: bookings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "room_id": 27,
+      "check_in": "2024-11-01",
+      "check_out": "2024-11-05",
+      "total_price": 1500,
+      "name": "John Doe",
+      "contact_no": "1234567890",
+      "email": "johndoe@example.com",
+      "id_card_id": 1,
+      "id_card_no": "A123456789",
+      "address": "123 Main Street, City, Country"
+  }
+  
+}

@@ -1,0 +1,18 @@
+meta {
+  name: rooms
+  type: http
+  seq: 1
+}
+
+patch {
+  url: rooms
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "room_id" : 27,
+    "delete_room" : false
+  }
+}

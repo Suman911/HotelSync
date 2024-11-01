@@ -1,0 +1,17 @@
+meta {
+  name: customerDetails
+  type: http
+  seq: 4
+}
+
+get {
+  url: customerDetails
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "room_id" : 14
+  }
+}

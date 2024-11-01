@@ -1,5 +1,6 @@
 <?php
 require_once './API.php';
+require_once '../auth/conn.php';
 
 final class DELETE extends API
 {
@@ -19,7 +20,7 @@ final class DELETE extends API
                     throw new Exception('API Request Not Found');
             }
         } catch (Exception $e) {
-            self::error('delete', $reqUri, $body, $e->getMessage());
+            self::error('DELETE', $reqUri, $body, $e->getMessage());
         }
     }
     private static function logout($auth, $body): void

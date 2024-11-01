@@ -1,0 +1,17 @@
+meta {
+  name: bookedRoomDetails
+  type: http
+  seq: 5
+}
+
+get {
+  url: bookedRoomDetails
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "room_id" : 27
+  }
+}

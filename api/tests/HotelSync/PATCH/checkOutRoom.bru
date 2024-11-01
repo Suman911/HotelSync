@@ -1,0 +1,19 @@
+meta {
+  name: checkOutRoom
+  type: http
+  seq: 4
+}
+
+patch {
+  url: checkOutRoom
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "booking_id": 9,
+      "remaining_amount": 1300
+  }
+  
+}
