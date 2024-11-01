@@ -265,6 +265,11 @@ final class OPTIONS extends API
                     'result' => 'Create a new complaint'
                 ],
             ],
+            'GET' => [
+                'complaints' => [
+                    'result' => 'Retrieve all complaints'
+                ],
+            ],
             'PUT' => [
                 'resolveComplaint' => [
                     'params' => ['complaint_id', 'budget'],

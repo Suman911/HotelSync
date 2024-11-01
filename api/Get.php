@@ -23,6 +23,9 @@ final class GET extends API
                 case '/bookedRoomDetails':
                     self::bookedRoomDetails($auth, $body);
                     break;
+                case '/complaints':
+                    self::complaints($auth, $body);
+                    break;
                 default:
                     throw new Exception('API Request Not Found');
             }
@@ -203,6 +206,28 @@ final class GET extends API
                 self::success($response);
             } else {
                 self::unsuccess(['message' => 'No booking found for the specified room']);
+            }
+        } catch (PDOException $e) {
+            throw new Exception("Database Error: " . $e->getMessage());
+        }
+    }
+    private static function complaints($auth, $body): void
+    {
+        $pdo = Conn::setConnection();
+
+        try {
+            $query = "SELECT * FROM complaint";
+            $stmt = $pdo->prepare($query);
+
+            if ($stmt->execute()) {
+                $complaints = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($complaints) {
+                    self::success(['complaints' => $complaints], 200);
+                } else {
+                    self::unsuccess(['message' => 'No complaints found'], 404);
+                }
+            } else {
+                throw new Exception('Failed to retrieve complaints');
             }
         } catch (PDOException $e) {
             throw new Exception("Database Error: " . $e->getMessage());
